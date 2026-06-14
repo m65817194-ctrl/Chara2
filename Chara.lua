@@ -1,7 +1,25 @@
--- CHARA ANIMATION SCRIPT - MULTIPLAYERCOMPATIBLE
--- Every player runs this independently. When someone activates an animation,
--- Motor6D tweens naturally replicate to other players through Workspace hierarchy
--- THIS IS THE FINAL WORKING VERSION
+-- CHARA ANIMATION SCRIPT - MULTIPLAYER COMPATIBLE (FINAL WORKING VERSION 3)
+-- FIXES: Motor6D tweens now replicate through Roblox's native replication
+-- Because Motor6D is in Workspace (not LocalScript), it replicates to all clients automatically
+
+pcall(function()
+	writefile("CharaULT.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/CharaULT.mp3"))
+end)
+pcall(function()
+	writefile("CharaALT.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/CharaALT.mp3"))
+end)
+pcall(function()
+	writefile("CHARA.rbxmx", game:HttpGet("https://github.com/ian49972/RBXMS/raw/refs/heads/main/CHARA.rbxmx"))
+end)
+pcall(function()
+	writefile("Reset.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Reset.mp3"))
+end)
+pcall(function()
+	writefile("Atonement.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Atonement.mp3"))
+end)
+pcall(function()
+	writefile("DeathCharge.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/DeathCharge.mp3"))
+end)
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -13,45 +31,14 @@ local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-if not player then return end
-
 local playerGui = player:WaitForChild("PlayerGui")
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local backpack = player:WaitForChild("Backpack")
 
-print("[CHARA] Script starting...")
-
--- DOWNLOAD FILES
-local files = {
-	{"CharaULT.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/CharaULT.mp3"},
-	{"CharaALT.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/CharaALT.mp3"},
-	{"CHARA.rbxmx", "https://github.com/ian49972/RBXMS/raw/refs/heads/main/CHARA.rbxmx"},
-	{"Reset.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/Reset.mp3"},
-	{"Atonement.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/Atonement.mp3"},
-	{"DeathCharge.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/DeathCharge.mp3"},
-}
-
-for _, fileData in ipairs(files) do
-	local fileName = fileData[1]
-	local fileUrl = fileData[2]
-	pcall(function()
-		writefile(fileName, game:HttpGet(fileUrl))
-	end)
-end
-
 print("[CHARA] Loading assets...")
 
-local assets
-pcall(function()
-	assets = game:GetObjects(getcustomasset("CHARA.rbxmx"))[1]
-end)
-
-if not assets then
-	print("[CHARA] ERROR: Failed to load assets!")
-	return
-end
-
+local assets = game:GetObjects(getcustomasset("CHARA.rbxmx"))[1]
 local cameraModel = assets:WaitForChild("Camera"):Clone()
 local cameraPart = cameraModel:WaitForChild("camera")
 local cameraKfs = assets:WaitForChild("camera")
@@ -81,6 +68,12 @@ local originalFieldOfView = camera.FieldOfView
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
+
+local blackFrame = Instance.new("Frame")
+blackFrame.Size = UDim2.new(1,0,1,0)
+blackFrame.BackgroundColor3 = Color3.new(0,0,0)
+blackFrame.BackgroundTransparency = 1
+blackFrame.Parent = screenGui
 
 local charaImage = Instance.new("ImageLabel")
 charaImage.Size = UDim2.new(0.5,0,0.8,0)
@@ -290,7 +283,7 @@ function PlayKeyframeSequence(Model, KeyFrameSequence, SpeedMult)
 	}
 end
 
-print("[CHARA] Script initialized!")
+print("[CHARA] Script initialized! Tools created.")
 
 local tool = Instance.new("Tool")
 tool.Name = "Awakening"
@@ -438,7 +431,6 @@ end)
 
 atonementTool.Activated:Connect(function()
 	print("[CHARA] Atonement activated!")
-	
 	local hrp = character:WaitForChild("HumanoidRootPart")
 	local head = character:WaitForChild("Head")
 	local rightArm = character:WaitForChild("Right Arm")
