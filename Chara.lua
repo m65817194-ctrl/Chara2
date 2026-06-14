@@ -185,6 +185,9 @@ local tDirection = {
 	[Enum.PoseEasingDirection.InOut] = Enum.EasingDirection.InOut,
 }
 
+-- STORE ALL MOTOR TRANSFORMS FOR NETWORKING
+local motorTransformStore = {}
+
 function PlayKeyframeSequence(Model, KeyFrameSequence, SpeedMult)
 	SpeedMult = SpeedMult or 1
 	local AllKeyFrames = {}
@@ -217,6 +220,7 @@ function PlayKeyframeSequence(Model, KeyFrameSequence, SpeedMult)
 						motorVal.Parent = Motor6D
 						motorVal.Value = Motor6D.Transform
 						motorValues[Pose.Name] = motorVal
+						motorTransformStore[Pose.Name] = motorVal
 					end
 				end
 			end
@@ -297,6 +301,18 @@ local tool = Instance.new("Tool")
 tool.Name = "Awakening"
 tool.RequiresHandle = false
 tool.Parent = backpack
+
+-- ANNOUNCE TO ALL PLAYERS THAT ANIMATION IS PLAYING
+for _, p in pairs(Players:GetPlayers()) do
+	if p ~= player then
+		pcall(function()
+			-- Signal other players that this player is animating
+			local signal = Instance.new("BindableEvent")
+			signal.Name = "CharaAnimSignal_" .. player.UserId
+			signal.Parent = character:FindFirstChild("HumanoidRootPart") or character
+		end)
+	end
+end
 
 tool.Activated:Connect(function()
 	print("[CHARA] Awakening activated!")
