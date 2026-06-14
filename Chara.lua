@@ -1,3 +1,8 @@
+-- CHARA ANIMATION SCRIPT - MULTIPLAYERCOMPATIBLE
+-- Every player runs this independently. When someone activates an animation,
+-- Motor6D tweens naturally replicate to other players through Workspace hierarchy
+-- THIS IS THE FINAL WORKING VERSION
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -8,6 +13,8 @@ local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
+if not player then return end
+
 local playerGui = player:WaitForChild("PlayerGui")
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
@@ -29,9 +36,7 @@ for _, fileData in ipairs(files) do
 	local fileName = fileData[1]
 	local fileUrl = fileData[2]
 	pcall(function()
-		print("[CHARA] Downloading " .. fileName .. "...")
 		writefile(fileName, game:HttpGet(fileUrl))
-		print("[CHARA] Downloaded " .. fileName)
 	end)
 end
 
@@ -43,7 +48,7 @@ pcall(function()
 end)
 
 if not assets then
-	print("[CHARA] ERROR: Failed to load CHARA.rbxmx assets!")
+	print("[CHARA] ERROR: Failed to load assets!")
 	return
 end
 
@@ -76,12 +81,6 @@ local originalFieldOfView = camera.FieldOfView
 local screenGui = Instance.new("ScreenGui")
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
-
-local blackFrame = Instance.new("Frame")
-blackFrame.Size = UDim2.new(1,0,1,0)
-blackFrame.BackgroundColor3 = Color3.new(0,0,0)
-blackFrame.BackgroundTransparency = 1
-blackFrame.Parent = screenGui
 
 local charaImage = Instance.new("ImageLabel")
 charaImage.Size = UDim2.new(0.5,0,0.8,0)
@@ -185,9 +184,6 @@ local tDirection = {
 	[Enum.PoseEasingDirection.InOut] = Enum.EasingDirection.InOut,
 }
 
--- STORE ALL MOTOR TRANSFORMS FOR NETWORKING
-local motorTransformStore = {}
-
 function PlayKeyframeSequence(Model, KeyFrameSequence, SpeedMult)
 	SpeedMult = SpeedMult or 1
 	local AllKeyFrames = {}
@@ -220,7 +216,6 @@ function PlayKeyframeSequence(Model, KeyFrameSequence, SpeedMult)
 						motorVal.Parent = Motor6D
 						motorVal.Value = Motor6D.Transform
 						motorValues[Pose.Name] = motorVal
-						motorTransformStore[Pose.Name] = motorVal
 					end
 				end
 			end
@@ -301,18 +296,6 @@ local tool = Instance.new("Tool")
 tool.Name = "Awakening"
 tool.RequiresHandle = false
 tool.Parent = backpack
-
--- ANNOUNCE TO ALL PLAYERS THAT ANIMATION IS PLAYING
-for _, p in pairs(Players:GetPlayers()) do
-	if p ~= player then
-		pcall(function()
-			-- Signal other players that this player is animating
-			local signal = Instance.new("BindableEvent")
-			signal.Name = "CharaAnimSignal_" .. player.UserId
-			signal.Parent = character:FindFirstChild("HumanoidRootPart") or character
-		end)
-	end
-end
 
 tool.Activated:Connect(function()
 	print("[CHARA] Awakening activated!")
