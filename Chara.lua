@@ -1,22 +1,3 @@
-pcall(function()
-	writefile("CharaULT.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/CharaULT.mp3"))
-end)
-pcall(function()
-	writefile("CharaALT.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/CharaALT.mp3"))
-end)
-pcall(function()
-	writefile("CHARA.rbxmx", game:HttpGet("https://github.com/ian49972/RBXMS/raw/refs/heads/main/CHARA.rbxmx"))
-end)
-pcall(function()
-	writefile("Reset.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Reset.mp3"))
-end)
-pcall(function()
-	writefile("Atonement.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/Atonement.mp3"))
-end)
-pcall(function()
-	writefile("DeathCharge.mp3", game:HttpGet("https://github.com/ian49972/smth/raw/refs/heads/main/DeathCharge.mp3"))
-end)
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -32,163 +13,40 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local backpack = player:WaitForChild("Backpack")
 
--- CREATE REMOTE EVENTS FOR REPLICATION
-local playAnimRemote = Instance.new("RemoteEvent")
-playAnimRemote.Name = "PlayCharaAnimation_" .. player.UserId
-playAnimRemote.Parent = ReplicatedStorage
+print("[CHARA] Script starting...")
 
-local function getColor(timeLength, points)
-	if not points or #points == 0 then return Color3.new(1,1,1) end
-	local data1 = points[1]
-	local allPoints = points[#points]
-	for i = 1, #points - 1 do
-		if points[i].Time <= timeLength and timeLength <= points[i + 1].Time then
-			data1 = points[i]
-			allPoints = points[i + 1]
-			local newPoint = (timeLength - data1.Time) / (allPoints.Time - data1.Time)
-			return data1.Value:Lerp(allPoints.Value, newPoint)
-		end
-	end
-	return data1.Value
-end
+-- DOWNLOAD FILES
+local files = {
+	{"CharaULT.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/CharaULT.mp3"},
+	{"CharaALT.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/CharaALT.mp3"},
+	{"CHARA.rbxmx", "https://github.com/ian49972/RBXMS/raw/refs/heads/main/CHARA.rbxmx"},
+	{"Reset.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/Reset.mp3"},
+	{"Atonement.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/Atonement.mp3"},
+	{"DeathCharge.mp3", "https://github.com/ian49972/smth/raw/refs/heads/main/DeathCharge.mp3"},
+}
 
-local function EndDialogue(gui)
-	for _, v in gui:GetChildren() do
-		if v.Name == "letter" then
-			v:SetAttribute("Ending", true)
-			TweenService:Create(v, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				Position = v.Position + UDim2.new(0, 0, 0, 50),
-				TextTransparency = 1,
-				TextStrokeTransparency = 1
-			}):Play()
-			game.Debris:AddItem(v, 0.4)
-		end
-	end
-end
-
-local function CreateDialogue(data, displayName)
-	displayName = player.Name
-	local DialogueGui = workspace:FindFirstChild("CUSTOM_DIALOGUE")
-	if not DialogueGui then return end
-	DialogueGui = DialogueGui:Clone()
-	local posY = 0
-	local posX = 0
-	local Time = 0
-	local Template = DialogueGui.Holder.Template
-	local Holder = DialogueGui.Holder
-	local ImageLabel = Template:WaitForChild("ImageLabel")
-	local NameLabel = Template:WaitForChild("Name")
-	ImageLabel.Position = ImageLabel.Position - UDim2.new(0, 0, 0, 100)
-	ImageLabel.ImageTransparency = 1
-	ImageLabel.Image = "rbxassetid://6192162228"
-	NameLabel.Position = NameLabel.Position - UDim2.new(0, 0, 0, 100)
-	NameLabel.TextTransparency = 1
-	NameLabel.TextStrokeTransparency = 1
-	TweenService:Create(ImageLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-		Position = ImageLabel.Position + UDim2.new(0, 0, 0, 100),
-		ImageTransparency = 0
-	}):Play()
-	TweenService:Create(NameLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-		Position = NameLabel.Position + UDim2.new(0, 0, 0, 100),
-		TextTransparency = 0,
-		TextStrokeTransparency = 0
-	}):Play()
-	
-	DialogueGui.Parent = playerGui
-	DialogueGui.Enabled = true
-	DialogueGui.Name = "CUSTOM_DIALOGUE"
-	CollectionService:AddTag(DialogueGui, "CUSTOM_DIALOGUE")
-	NameLabel.Text = displayName
-	
-	local isHigh = false
-	for _, v in data do
-		if v.HigherUp then
-			isHigh = true
-			TweenService:Create(Holder, TweenInfo.new(0.2), {Position = UDim2.new(0.5, 0, 0.965, 0)}):Play()
-		end
-	end
-	if not isHigh then
-		TweenService:Create(Holder, TweenInfo.new(0.8), {Position = UDim2.new(0.5, 0, 1, 0)}):Play()
-	end
-	
-	for _, v in data do
-		local split = string.split(v.Text, "")
-		local font = v.Bold and Enum.Font.SourceSansBold or v.Italic and Enum.Font.SourceSansItalic or Enum.Font.SourceSans
-		for _, b in split do
-			posY = posY + TextService:GetTextSize(b, 25, font, Vector2.new(100, 100)).X
-		end
-	end
-	
-	local totalTypingTime = 0
-	for _, v in data do
-		local split = string.split(v.Text, "")
-		local font = v.Bold and Enum.Font.SourceSansBold or v.Italic and Enum.Font.SourceSansItalic or Enum.Font.SourceSans
-		for _, b in split do
-			local TextService_TextLabel = TextService:GetTextSize(b, 25, font, Vector2.new(100, 100))
-			local TextLabel = Instance.new("TextLabel")
-			local newPosY = posY
-			local newPosX = posX
-			TextLabel.AnchorPoint = Vector2.new(0, 0.5)
-			TextLabel.Position = UDim2.new(0.5, newPosX - newPosY / 2 // 1, 0.5, 10)
-			TextLabel.Size = UDim2.new(0, TextService_TextLabel.X, 0, TextService_TextLabel.Y)
-			TextLabel.Text = b
-			TextLabel.Name = "letter"
-			TextLabel.Font = font
-			TextLabel.TextSize = 25
-			TextLabel.Parent = Template
-			TextLabel.BackgroundTransparency = 1
-			TextLabel.TextStrokeColor3 = v.TextStrokeColor
-			TextLabel.TextStrokeTransparency = 1
-			TextLabel.TextTransparency = 1
-			task.delay(Time, function()
-				local osClock = os.clock()
-				repeat
-					local keyPointTime = math.min((os.clock() - osClock) / 0.35, 1)
-					local shakeLifeTime = math.min((os.clock() - osClock) / (v.Shake.Lifetime or 0.3), 1)
-					local currentShake = not v.Shake.Enabled and UDim2.new(0, 0, 0, 0) or UDim2.new(0, math.random(-v.Shake.Intensity, v.Shake.Intensity) * (1 - shakeLifeTime), 0, math.random(-v.Shake.Intensity, v.Shake.Intensity) * (1 - shakeLifeTime))
-					local textSettings = 1 - (1 + 2.70158 * math.pow(keyPointTime - 1, 3) + 1.70158 * math.pow(keyPointTime - 1, 2))
-					TextLabel.TextStrokeTransparency = (1 - keyPointTime) ^ 10
-					TextLabel.TextTransparency = textSettings
-					TextLabel.TextSize = 25 + 25 * textSettings
-					TextLabel.TextColor3 = getColor(keyPointTime, v.Color.Keypoints)
-					TextLabel.Position = UDim2.new(0.5, newPosX - newPosY / 2 // 1, 0.5, 0) + currentShake
-					task.wait()
-				until os.clock() - osClock > math.max(0.35, v.Shake.Lifetime or 0.3) or not TextLabel or TextLabel:GetAttribute("Ending")
-				if TextLabel then
-					TextLabel.TextStrokeTransparency = 0
-					TextLabel.TextTransparency = 0
-					TextLabel.TextSize = 25
-					TextLabel.TextColor3 = v.Color.Keypoints[#v.Color.Keypoints].Value
-					TextLabel.Position = UDim2.new(0.5, newPosX - newPosY / 2 // 1, 0.5, 0)
-				end
-			end)
-			Time = Time + (v.TypeSpeed or 0.03)
-			posX = posX + TextService_TextLabel.X
-			totalTypingTime = Time
-		end
-	end
-	
-	task.spawn(function()
-		task.wait(totalTypingTime + 1) 
-		EndDialogue(Template)
-		TweenService:Create(ImageLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-			Position = ImageLabel.Position - UDim2.new(0, 0, 0, 100),
-			ImageTransparency = 1
-		}):Play()
-		TweenService:Create(NameLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-			Position = NameLabel.Position - UDim2.new(0, 0, 0, 100),
-			TextTransparency = 1,
-			TextStrokeTransparency = 1
-		}):Play()
-		task.delay(0.8, function()
-			DialogueGui:Destroy()
-		end)
+for _, fileData in ipairs(files) do
+	local fileName = fileData[1]
+	local fileUrl = fileData[2]
+	pcall(function()
+		print("[CHARA] Downloading " .. fileName .. "...")
+		writefile(fileName, game:HttpGet(fileUrl))
+		print("[CHARA] Downloaded " .. fileName)
 	end)
 end
 
 print("[CHARA] Loading assets...")
 
-local assets = game:GetObjects(getcustomasset("CHARA.rbxmx"))[1]
+local assets
+pcall(function()
+	assets = game:GetObjects(getcustomasset("CHARA.rbxmx"))[1]
+end)
+
+if not assets then
+	print("[CHARA] ERROR: Failed to load CHARA.rbxmx assets!")
+	return
+end
+
 local cameraModel = assets:WaitForChild("Camera"):Clone()
 local cameraPart = cameraModel:WaitForChild("camera")
 local cameraKfs = assets:WaitForChild("camera")
@@ -433,45 +291,15 @@ function PlayKeyframeSequence(Model, KeyFrameSequence, SpeedMult)
 	}
 end
 
-print("[CHARA] Script initialized! Tools created.")
+print("[CHARA] Script initialized!")
 
--- BROADCAST ANIMATION TO ALL PLAYERS
-local function BroadcastAnimation(animationType)
-	playAnimRemote:FireAllClients(animationType, player.Name)
-end
-
--- LISTEN FOR ANIMATIONS FROM OTHER PLAYERS
-playAnimRemote.OnClientEvent:Connect(function(animationType, playerName)
-	local targetPlayer = Players:FindFirstChild(playerName)
-	if not targetPlayer or not targetPlayer.Character then return end
-	
-	local targetChar = targetPlayer.Character
-	local targetHrp = targetChar:FindFirstChild("HumanoidRootPart")
-	
-	if targetHrp then
-		targetHrp.Anchored = true
-		
-		if animationType == "awakening" then
-			task.delay(15, function()
-				if targetHrp and targetHrp.Parent then
-					targetHrp.Anchored = false
-				end
-			end)
-		elseif animationType == "atonement" then
-			task.delay(20, function()
-				if targetHrp and targetHrp.Parent then
-					targetHrp.Anchored = false
-				end
-			end)
-		end
-	end
-end)
+local tool = Instance.new("Tool")
+tool.Name = "Awakening"
+tool.RequiresHandle = false
+tool.Parent = backpack
 
 tool.Activated:Connect(function()
 	print("[CHARA] Awakening activated!")
-	
-	-- BROADCAST TO ALL PLAYERS
-	BroadcastAnimation("awakening")
 	
 	tool:Destroy()
 	
@@ -611,9 +439,6 @@ end)
 
 atonementTool.Activated:Connect(function()
 	print("[CHARA] Atonement activated!")
-	
-	-- BROADCAST TO ALL PLAYERS
-	BroadcastAnimation("atonement")
 	
 	local hrp = character:WaitForChild("HumanoidRootPart")
 	local head = character:WaitForChild("Head")
@@ -783,11 +608,6 @@ atonementTool.Activated:Connect(function()
 		end)
 	end)
 end)
-
-local tool = Instance.new("Tool")
-tool.Name = "Awakening"
-tool.RequiresHandle = false
-tool.Parent = backpack
 
 atonementTool.Parent = backpack
 
